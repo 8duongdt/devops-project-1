@@ -86,4 +86,4 @@ npm test
 ## Team Members
 - Hào Nguyễn
 - Dinh Duong
-
+- Ngoc Duyet
