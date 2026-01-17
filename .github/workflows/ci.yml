@@ -23,7 +23,7 @@ jobs:
           - 5432:5432
         # Health check để đảm bảo DB đã sẵn sàng trước khi chạy test
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
