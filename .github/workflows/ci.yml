@@ -59,16 +59,15 @@ jobs:
       - name: Install Dependencies
         run: |
           cd backend
-          pnpm install --no-frozen-lockfile
+          pnpm install --frozen-lockfile
 
       # --- [MỚI] Tạo bảng trong Database ---
       - name: Initialize Database
         run: |
-          # Cài đặt client nhanh hơn
-          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
-          # Chạy file database.sql để tạo bảng todos
-          export PGPASSWORD=postgres
-          psql -h localhost -U postgres -d tododb -f database/database.sql
+          # Sử dụng container postgres có sẵn để chạy lệnh SQL, không cần apt-get
+          docker run --rm --network host -v ${{ github.workspace }}/database:/database postgres:15-alpine psql -h localhost -U postgres -d tododb -f /database/database.sql
+          env:
+            PGPASSWORD: postgres
 
       - name: Run Tests
         # --- [MỚI] Cấu hình biến môi trường kết nối DB ---

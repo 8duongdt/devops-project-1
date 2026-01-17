@@ -31,8 +31,8 @@
 FROM node:18-alpine AS builder
 # Set the working directory inside the container
 WORKDIR /app
-# Install pnpm
-RUN npm install -g pnpm
+# Install pnpm using Corepack (faster than npm install -g)
+RUN corepack enable && corepack prepare pnpm@latest --activate
 # Copy package.json and pnpm-lock.yaml (if exists)
 COPY package.json pnpm-lock.yaml* ./
 # Install all dependencies
@@ -48,9 +48,9 @@ FROM node:18-alpine
 WORKDIR /app
 # Copy the package.json and install *only* production dependencies
 COPY package.json pnpm-lock.yaml* ./
-RUN npm install -g pnpm && \
+RUN corepack enable && corepack prepare pnpm@latest --activate && \
     --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --prod --frozen-lockfile || pnpm install --prod
+    pnpm install --prod --frozen-lockfile
 # Copy the built app code from the "builder" stage
 COPY --from=builder /app/server.js ./server.js
 # (If you had a build step, you would copy the 'dist' folder instead)
