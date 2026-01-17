@@ -1,0 +1,3 @@
+# Treat lockfiles as binary to hide diffs in Pull Requests
+pnpm-lock.yaml binary
+package-lock.json binary
