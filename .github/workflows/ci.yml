@@ -1,6 +1,5 @@
 name: CI Pipeline
 
-# Trigger: Chạy khi có push vào main hoặc có Pull Request
 on:
   push:
     branches: [ main ]
@@ -11,6 +10,24 @@ jobs:
   # Job 1: Test Backend Node.js
   test-backend:
     runs-on: ubuntu-latest
+    
+    # --- [MỚI] Bật Database ảo để test ---
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: tododb
+        ports:
+          - 5432:5432
+        # Health check để đảm bảo DB đã sẵn sàng trước khi chạy test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,16 +42,31 @@ jobs:
           cd backend
           npm install
 
+      # --- [MỚI] Tạo bảng trong Database ---
+      - name: Initialize Database
+        run: |
+          # Cài đặt client để chạy lệnh SQL
+          sudo apt-get update && sudo apt-get install -y postgresql-client
+          # Chạy file database.sql để tạo bảng todos
+          export PGPASSWORD=postgres
+          psql -h localhost -U postgres -d tododb -f database/database.sql
+
       - name: Run Tests
-        # Lệnh này sẽ chạy các file test trong folder backend/tests/
+        # --- [MỚI] Cấu hình biến môi trường kết nối DB ---
+        env:
+          DB_HOST: localhost
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_NAME: tododb
+          DB_PORT: 5432
         run: |
           cd backend
           npm test
 
-  # Job 2: Build thử Docker Image (để chắc chắn Dockerfile không lỗi)
+  # Job 2: Build thử Docker Image
   build-docker:
     runs-on: ubuntu-latest
-    needs: test-backend # Chỉ chạy nếu test-backend thành công
+    needs: test-backend
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
