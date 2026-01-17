@@ -40,21 +40,65 @@
 version: '3.8'
 
 services:
-  # STUDENT TODO: Define frontend service
-  frontend:
-    build: ./frontend
-    # TODO: Add ports, depends_on
-
-  # STUDENT TODO: Define backend service
-  backend:
-    build: ./backend
-    # TODO: Add ports, environment, depends_on, healthcheck
-
-  # STUDENT TODO: Define postgres service
+  # 1. Postgres Service (Database)
   postgres:
     image: postgres:15-alpine
-    # TODO: Add environment, ports, volumes, healthcheck
+    container_name: devops-db
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: tododb
+    volumes:
+      # Mount named volume để giữ dữ liệu khi restart
+      - postgres_data:/var/lib/postgresql/data
+      # Mount file script để tạo bảng khi khởi chạy lần đầu
+      - ./database/database.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432" # Optional: Để bạn có thể kết nối từ DBeaver bên ngoài
+    healthcheck:
+      # Kiểm tra xem DB đã sẵn sàng chưa
+      test: ["CMD-SHELL", "pg_isready -U myuser -d tododb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-# STUDENT TODO: Define named volumes
+  # 2. Backend Service (API)
+  backend:
+    build: ./backend
+    container_name: devops-backend
+    ports:
+      - "8080:8080" # Map đúng port 8080 như trong server.js
+    environment:
+      # Cấu hình kết nối DB (Các biến này khớp với server.js)
+      DB_HOST: postgres      # Tên service của database ở trên
+      DB_PORT: 5432
+      DB_USER: myuser        # Khớp với POSTGRES_USER
+      DB_PASSWORD: mypassword # Khớp với POSTGRES_PASSWORD
+      DB_NAME: tododb        # Khớp với POSTGRES_DB
+      PORT: 8080
+    depends_on:
+      # Backend sẽ đợi cho đến khi Postgres báo trạng thái "healthy" mới chạy
+      postgres:
+        condition: service_healthy
+    # Healthcheck cho Backend (kiểm tra endpoint /health)
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # 3. Frontend Service (React UI)
+  frontend:
+    build: ./frontend
+    container_name: devops-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    # Môi trường cho React (Dù React build tĩnh nhưng khai báo rõ ràng vẫn tốt)
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080
+
+# 4. Define Named Volumes
 volumes:
   postgres_data:
