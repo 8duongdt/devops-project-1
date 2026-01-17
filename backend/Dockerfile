@@ -48,8 +48,8 @@ FROM node:18-alpine
 WORKDIR /app
 # Copy the package.json and install *only* production dependencies
 COPY package.json pnpm-lock.yaml* ./
-RUN corepack enable && corepack prepare pnpm@latest --activate && \
-    --mount=type=cache,id=pnpm,target=/pnpm/store \
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    corepack enable && corepack prepare pnpm@latest --activate && \
     pnpm install --prod --frozen-lockfile
 # Copy the built app code from the "builder" stage
 COPY --from=builder /app/server.js ./server.js
@@ -59,4 +59,4 @@ COPY --from=builder /app/server.js ./server.js
 EXPOSE 8080 
 # port 8080 follow file server
 # The command to run the application (check your package.json'start' script)
-CMD [ "npm", "start" ]
+CMD [ "pnpm", "start" ]
