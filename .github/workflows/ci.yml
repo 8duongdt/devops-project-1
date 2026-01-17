@@ -63,11 +63,11 @@ jobs:
 
       # --- [MỚI] Tạo bảng trong Database ---
       - name: Initialize Database
+        env:
+          PGPASSWORD: postgres
         run: |
           # Sử dụng container postgres có sẵn để chạy lệnh SQL, không cần apt-get
-          docker run --rm --network host -v ${{ github.workspace }}/database:/database postgres:15-alpine psql -h localhost -U postgres -d tododb -f /database/database.sql
-          env:
-            PGPASSWORD: postgres
+          docker run --rm --network host -e PGPASSWORD=$PGPASSWORD -v ${{ github.workspace }}/database:/database postgres:15-alpine psql -h localhost -U postgres -d tododb -f /database/database.sql
 
       - name: Run Tests
         # --- [MỚI] Cấu hình biến môi trường kết nối DB ---
