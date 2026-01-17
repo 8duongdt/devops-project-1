@@ -101,11 +101,12 @@ app.put('/api/todos/:id', async (req, res) => {
 
 const port = process.env.PORT || 8080;
 
-// BUG #5: Server starts even in test mode, causing port conflicts
-// STUDENT FIX: Only start server if NOT in test mode
-app.listen(port, () => {
-   console.log(`Backend running on port ${port}`);
-});
+// FIX BUG #5: Chỉ khởi động server nếu file này được chạy trực tiếp (không phải được import bởi test)
+if (require.main === module) {
+    app.listen(port, () => {
+        console.log(`Backend running on port ${port}`);
+    });
+}
 
-// BUG #6: App not exported - tests can't import it!
-// STUDENT FIX: Export the app module
+// FIX BUG #6: Export app để file test có thể sử dụng
+module.exports = app;
