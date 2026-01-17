@@ -6,9 +6,9 @@
     "build": "react-scripts build"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "react-scripts": "5.0.1",
-    "serve": "^14.2.0"
+    "serve": "^14.2.5"
   }
 }

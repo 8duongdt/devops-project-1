@@ -28,9 +28,11 @@
 FROM node:18-alpine AS builder
 WORKDIR /app
 
-# 1. Copy package files và cài dependencies
-COPY package*.json ./
-RUN npm install
+# 1. Cài đặt pnpm và dependencies
+RUN npm install -g pnpm
+COPY package.json pnpm-lock.yaml* ./
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile || pnpm install
 
 # 2. Copy source code
 COPY . .

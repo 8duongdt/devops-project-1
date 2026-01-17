@@ -31,10 +31,13 @@
 FROM node:18-alpine AS builder
 # Set the working directory inside the container
 WORKDIR /app
-# Copy package.json and package-lock.json (or yarn.lock)
-COPY package*.json ./
-# Install all dependencies (including devDependencies)
-RUN npm install
+# Install pnpm
+RUN npm install -g pnpm
+# Copy package.json and pnpm-lock.yaml (if exists)
+COPY package.json pnpm-lock.yaml* ./
+# Install all dependencies
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile || pnpm install
 # Copy the rest of the application source code
 COPY . .
 # (If your project has a build step, e.g., TypeScript, add it here)
@@ -44,8 +47,10 @@ COPY . .
 FROM node:18-alpine
 WORKDIR /app
 # Copy the package.json and install *only* production dependencies
-COPY package*.json ./
-RUN npm install --production
+COPY package.json pnpm-lock.yaml* ./
+RUN npm install -g pnpm && \
+    --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --prod --frozen-lockfile || pnpm install --prod
 # Copy the built app code from the "builder" stage
 COPY --from=builder /app/server.js ./server.js
 # (If you had a build step, you would copy the 'dist' folder instead)

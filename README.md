@@ -87,3 +87,7 @@ npm test
 - Hào Nguyễn
 - Dinh Duong
 - Ngoc Duyet
+
+## thay thế lệnh npm bằng pnpm vì pnpm nhanh hơn npm .
+
+dùng lệnh pnpm update --latest để update lên các version package mới nhất
